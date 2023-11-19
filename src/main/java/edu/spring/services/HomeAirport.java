@@ -56,21 +56,16 @@ public class HomeAirport {
         Random rnd = new Random();
         int n = rnd.nextInt(maxRunwaysCount - minRunwaysCount + 1) + minRunwaysCount;
         runways = new Runway[n];
-        int maxMass = 0;
-        int maxLength = 0;
         for (int i = 0; i < n; i++) {
             int num = rnd.nextInt(36) + 1;
             runways[i] = new Runway(num, prefixes1.charAt(i), prefixes2.charAt(i));
-            if (runways[i].getLength() > maxLength) {
-                maxLength = runways[i].getLength();
-            }
-            if (runways[i].getAllowedAircraftMass() > maxMass) {
-                maxMass = runways[i].getAllowedAircraftMass();
-            }
         }
-        if (maxMass < maxAircraftMass || maxLength < maxAircraftTakeoffRun) {
-            runways[0].setLength(maxAircraftTakeoffRun);
-            runways[0].setAllowedAircraftMass(maxAircraftMass);
-        }
+        // Первая ВВП аэропорта всегда может принять самый большой борт
+        runways[0].setLength(maxAircraftTakeoffRun);
+        runways[0].setAllowedAircraftMass(maxAircraftMass);
+    }
+
+    public Airport getAirport() {
+        return this.airport;
     }
 }

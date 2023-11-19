@@ -10,6 +10,7 @@ import java.awt.geom.Point2D;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,10 +35,37 @@ public class AirportDaoJdbc implements AirportDao {
     }
 
     @Override
-    public Airport getRandomAirport(String exceptMunicipality) {
-        Map<String, Object> params = Collections.singletonMap("exceptMunicipality", exceptMunicipality);
-        List<Airport> origins = namedPJdbcOps.query("select * from airport where municipality <> :exceptMunicipality order by random() limit 1", params, new AirportMapper());
-        return origins.get(0);
+    public Airport getRandomAirport(int maxDistance, Point2D originCoords) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("minDistance", 50); // минимальное расстояние для поиска аэропорта - 50 морских миль
+        params.put("maxDistance", maxDistance);
+        params.put("origLat", originCoords.getX());
+        params.put("origLon", originCoords.getY());
+        List<Airport> airports = namedPJdbcOps.query(
+                "select * from airport a where distance_on_earth(:origLat, :origLon, a.coordinates[0], a.coordinates[1]) between :minDistance and :maxDistance order by random() limit 1",
+                params,
+                new AirportMapper());
+        return airports.get(0);
+    }
+
+    @Override
+    public Airport findByIataCode(String iataCode) {
+        Map<String, Object> params = Collections.singletonMap("iataCode", iataCode);
+        return namedPJdbcOps.queryForObject(
+                "select * from airport where iata_code = :iataCode", params, new AirportMapper()
+        );
+    }
+
+    @Override
+    public int getDistance(Point2D originCoords, Point2D destCoords) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("origLat", originCoords.getX());
+        params.put("origLon", originCoords.getY());
+        params.put("destLat", destCoords.getX());
+        params.put("destLon", destCoords.getY());
+        return namedPJdbcOps.queryForObject(
+                "select round(distance_on_earth(:origLat, :origLon, :destLat, :destLon))", params, Integer.class
+        );
     }
 
     private static class AirportMapper implements RowMapper<Airport> {
