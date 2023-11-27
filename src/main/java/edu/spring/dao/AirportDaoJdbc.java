@@ -19,13 +19,19 @@ import java.util.Map;
 public class AirportDaoJdbc implements AirportDao {
     private final NamedParameterJdbcOperations namedPJdbcOps;
 
-    public AirportDaoJdbc(NamedParameterJdbcOperations namedParameterJdbcOperations) {
-        this.namedPJdbcOps = namedParameterJdbcOperations;
+    public AirportDaoJdbc(NamedParameterJdbcOperations namedPJdbcOps) {
+        this.namedPJdbcOps = namedPJdbcOps;
     }
 
     @Override
     public int count() {
         return namedPJdbcOps.queryForObject("select count(*) from airport", Collections.EMPTY_MAP, Integer.class);
+    }
+
+    @Override
+    public Airport getById(int id) {
+        Map<String, Object> params = Collections.singletonMap("id", id);
+        return namedPJdbcOps.queryForObject("select * from airport where id = :id", params, new AirportMapper());
     }
 
     @Override
@@ -45,7 +51,12 @@ public class AirportDaoJdbc implements AirportDao {
                 "select * from airport a where distance_on_earth(:origLat, :origLon, a.coordinates[0], a.coordinates[1]) between :minDistance and :maxDistance order by random() limit 1",
                 params,
                 new AirportMapper());
-        return airports.get(0);
+        if (airports.size() > 0) {
+            return airports.get(0);
+        }
+        else {
+            throw new NoAirportFoundException("Не найдено подходящего аэропорта вылета");
+        }
     }
 
     @Override
@@ -79,7 +90,9 @@ public class AirportDaoJdbc implements AirportDao {
             String municipality = resultSet.getString("municipality");
             String iataCode = resultSet.getString("iata_code");
             String timeZone = resultSet.getString("timezone");
-            return new Airport(id, name, coordinates, isoCountry, municipality, iataCode, timeZone);
+            Airport result = new Airport(name, coordinates, isoCountry, municipality, iataCode, timeZone);
+            result.setId(id);
+            return result;
         }
     }
 }

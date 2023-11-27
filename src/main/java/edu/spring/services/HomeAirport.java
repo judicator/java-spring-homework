@@ -1,52 +1,64 @@
 package edu.spring.services;
 
-import edu.spring.dao.AircraftDao;
 import edu.spring.dao.AirportDao;
+import edu.spring.dao.FlightDao;
+import edu.spring.dao.RunwayDao;
 import edu.spring.domain.Airport;
+import edu.spring.domain.Flight;
 import edu.spring.domain.Runway;
+import edu.spring.utils.Utils;
+import lombok.Getter;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
+import java.time.*;
+import java.util.List;
 import java.util.Random;
 
 @Service
 public class HomeAirport {
+    // Минимальное кол-во ВПП
     private static final int minRunwaysCount = 2;
-    private static final int maxRunwaysCount = 7;
+    // Максимальное кол-во ВПП
+    private static final int maxRunwaysCount = 5;
 
+    // Множитель для скорости, с которой "идут" часы аэропорта
+    private static final int clockSpeedMultiplier = 30;
+
+    @Getter
     private final Airport airport;
 
-    private final int maxAircraftMass;
-    private final int maxAircraftTakeoffRun;
+    @Getter
+    private int runwaysCount;
 
-    private Runway[] runways;
+    private final RunwayDao runwayDao;
 
-    public HomeAirport(AirportDao airportDao, AircraftDao aircraftDao) {
-        this.airport = airportDao.getRandomHomeAirport();
-        this.maxAircraftMass = aircraftDao.getMaxMass();
-        this.maxAircraftTakeoffRun = aircraftDao.getMaxTakeoffRun();
-        this.generateRunways();
+    private final FlightDao flightDao;
+
+    @Getter
+    private final ZoneId timezone;
+
+    private long startEpochMilli;
+
+
+    public HomeAirport(AirportDao airportDao, RunwayDao runwayDao, FlightDao flightDao) {
+        airport = airportDao.getRandomHomeAirport();
+        timezone = ZoneId.of(airport.getTimeZone());
+        startEpochMilli = Clock.system(timezone).instant().toEpochMilli();
+        this.runwayDao = runwayDao;
+        this.flightDao = flightDao;
+        generateRunways();
     }
 
-    // Вывод приветствия "от лица" домашнего аэропорта
+    // Вывод приветствия домашнего аэропорта
     public void greeting() {
-        int runwaysCount = runways.length;
-        System.out.println("Welcome to " + this.airport.getName() + " (" + this.airport.getMunicipality() + ", " + this.airport.getIsoCountry() + ") [" + this.airport.getIataCode() + "]");
-        ZoneId tzId = ZoneId.of(this.airport.getTimeZone());
-        LocalDateTime airportDateTime = LocalDateTime.now(tzId);
-        String offset = tzId.getRules().getOffset(airportDateTime).toString();
-        if (offset == "Z") {
-            offset = "";
-        }
-        System.out.println("Local date/time is " + airportDateTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")) +
-                " (UTC" + offset + ")");
+        System.out.println("Welcome to " + airport.getName() + " (" + airport.getMunicipality() + ", " + airport.getIsoCountry() + ") [" + airport.getIataCode() + "]");
+        System.out.println("Local date/time is " + Utils.formatDateTime(getLocalDateTime(), timezone));
         System.out.println("Airport has " + runwaysCount + " runways:");
-        for (int i = 0; i < runwaysCount; i++) {
-            System.out.println("    " + runways[i].getFullName() + " (" + runways[i].getLength() + " meters long, max allowed aircraft mass is " +
-                    runways[i].getAllowedAircraftMass() + " t)");
-        }
+        List<Runway> runways = runwayDao.getAll();
+        runways.forEach(runway -> {
+            System.out.println("    " + runway);
+        });
     }
 
     // Генерация взлётно-посадочных полос для домашнего аэропорта
@@ -54,18 +66,33 @@ public class HomeAirport {
         String prefixes1 = "ABCDEFG";
         String prefixes2 = "ZYXWVUT";
         Random rnd = new Random();
-        int n = rnd.nextInt(maxRunwaysCount - minRunwaysCount + 1) + minRunwaysCount;
-        runways = new Runway[n];
-        for (int i = 0; i < n; i++) {
-            int num = rnd.nextInt(36) + 1;
-            runways[i] = new Runway(num, prefixes1.charAt(i), prefixes2.charAt(i));
+        runwaysCount = rnd.nextInt(maxRunwaysCount - minRunwaysCount + 1) + minRunwaysCount;
+        for (int i = 0; i < runwaysCount; i++) {
+            runwayDao.insert(Runway.factory(prefixes1.charAt(i), prefixes2.charAt(i), i == 0));
         }
-        // Первая ВВП аэропорта всегда может принять самый большой борт
-        runways[0].setLength(maxAircraftTakeoffRun);
-        runways[0].setAllowedAircraftMass(maxAircraftMass);
     }
 
-    public Airport getAirport() {
-        return this.airport;
+    @Scheduled(initialDelay = 5000, fixedRate = 5000)
+    private void arrivalsDashboard() {
+        List<Flight> flights = flightDao.getFlightsForDashboard(getLocalDateTime());
+        System.out.println("");
+        System.out.println("Local date/time: " + Utils.formatDateTime(getLocalDateTime(), getTimezone()));
+        System.out.println("==========================================================================================================================================");
+        System.out.println("Arrival time           Destination                               Flight number Airline                        Status");
+        System.out.println("==========================================================================================================================================");
+        flights.forEach(flight -> {
+            String flightInfo = Utils.fixedLengthString(flight.arrivalTimeForDashboard(), 22) + " ";
+            flightInfo += Utils.fixedLengthString(flight.getOrigin().toString(), 41) + " ";
+            flightInfo += Utils.fixedLengthString(flight.getCode(), 13) + " ";
+            flightInfo += Utils.fixedLengthString(flight.getCompany(), 30) + " ";
+            flightInfo += flight.statusForDashboard();
+            System.out.println(flightInfo);
+        });
+    }
+
+    public LocalDateTime getLocalDateTime() {
+        long msNow = Clock.system(timezone).instant().toEpochMilli();
+        long msPassed = msNow - startEpochMilli;
+        return Instant.ofEpochMilli(msNow + msPassed * clockSpeedMultiplier).atZone(timezone).toLocalDateTime();
     }
 }

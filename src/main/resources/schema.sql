@@ -46,6 +46,49 @@ CREATE TABLE IF NOT EXISTS airline
 )
 TABLESPACE pg_default;
 
+CREATE SEQUENCE IF NOT EXISTS runway_id
+    INCREMENT 1
+    START 1
+    MINVALUE 1
+    MAXVALUE 9223372036854775807
+    CACHE 1;
+
+CREATE TABLE IF NOT EXISTS runway
+(
+    id integer NOT NULL,
+	name_dir1 char(3) COLLATE pg_catalog."default" NOT NULL,
+	name_dir2 char(3) COLLATE pg_catalog."default" NOT NULL,
+    is_main boolean NOT NULL,
+	length int NOT NULL,
+	allowed_aircraft_mass int NOT NULL,
+    reserved_for int NULL,
+    reserved_until timestamp NULL,
+    CONSTRAINT runway_pkey PRIMARY KEY (id)
+)
+TABLESPACE pg_default;
+
+CREATE SEQUENCE IF NOT EXISTS flight_id
+    INCREMENT 1
+    START 1
+    MINVALUE 1
+    MAXVALUE 9223372036854775807
+    CACHE 1;
+
+CREATE TABLE IF NOT EXISTS flight
+(
+    id integer NOT NULL,
+	code varchar(6) COLLATE pg_catalog."default" NOT NULL,
+	company varchar(100) COLLATE pg_catalog."default" NOT NULL,
+    aircraft int NOT NULL,
+    status varchar(20) COLLATE pg_catalog."default" NOT NULL,
+    origin int NOT NULL,
+    scheduled_arrival_time timestamp NOT NULL,
+    actual_arrival_time timestamp NOT NULL,
+    runway_num char(3) COLLATE pg_catalog."default" NULL,
+    CONSTRAINT flight_pkey PRIMARY KEY (id)
+)
+TABLESPACE pg_default;
+
 -- Функция считает расстояние между двумя точками на поверхности Земли, результат в морских милях
 CREATE OR REPLACE FUNCTION distance_on_earth(lat1 float, lon1 float, lat2 float, lon2 float)
 RETURNS float

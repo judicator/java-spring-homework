@@ -6,24 +6,26 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Aircraft {
-    private final int id;
+    private Integer id;
     // ICAO designator (код модели) (4 символа)
-    private final String icaoCode;
+    private String icaoCode;
     // Название модели
-    private final String model;
+    private String model;
     // Дальность полёта (в морских милях)
-    private final int range;
+    private int range;
     // Скорость на эшелоне (в узлах)
-    private final int speed;
+    private int speed;
     // MTOW (максимальная взлётная масса) (в метрических тоннах)
-    private final int mass;
+    private int mass;
     // Пробег при посадке (в метрах)
-    private final int landingRun;
+    private int landingRun;
     // Пробег при взлёте (в метрах)
-    private final int takeoffRun;
+    private int takeoffRun;
+    // Максимальное кол-во пассажиров
+    private int passengers;
 
-    public Aircraft(int id, String icaoCode, String model, int range, int speed, int mass, int landingRun, int takeoffRun) {
-        this.id = id;
+    public Aircraft(String icaoCode, String model, int range, int speed, int mass, int landingRun, int takeoffRun, int passengers) {
+        this.id = null;
         this.icaoCode = icaoCode;
         this.model = model;
         this.range = range;
@@ -31,5 +33,10 @@ public class Aircraft {
         this.mass = mass;
         this.landingRun = landingRun;
         this.takeoffRun = takeoffRun;
+        this.passengers = passengers;
+    }
+
+    public String toString() {
+        return "[" + getIcaoCode() + "] " + getModel();
     }
 }

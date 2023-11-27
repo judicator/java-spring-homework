@@ -8,6 +8,8 @@ import java.awt.geom.Point2D;
 public interface AirportDao {
     int count();
 
+    Airport getById(int id);
+
     Airport getRandomHomeAirport();
 
     Airport getRandomAirport(int maxDistance, Point2D originCoords);

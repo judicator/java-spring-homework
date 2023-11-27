@@ -1,15 +1,15 @@
 package edu.spring.domain;
 
+import edu.spring.utils.Utils;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 @Getter
 @Setter
 public class Flight {
-    private int id;
+    private Integer id;
     // Код рейса
     private String code;
     // Название авиакомпании
@@ -20,24 +20,48 @@ public class Flight {
     private FlightStatus status;
     // Аэропорт вылета
     private Airport origin;
-    // Дата/время вылета
-    private LocalDateTime departedAt;
     // Дата/время прибытия по расписанию
     private LocalDateTime scheduledArrivalTime;
     // Реальные дата/время прибытия
     private LocalDateTime actualArrivalTime;
+    // Номер полосы для посадки
+    private String runwayNum;
 
-    public Flight(int id, String code, String company, Aircraft aircraft, Airport origin, LocalDateTime departedAt) {
-        this.id = id;
+    public Flight(String code, String company, Aircraft aircraft, Airport origin, FlightStatus status, LocalDateTime scheduledArrivalTime, LocalDateTime actualArrivalTime, String runwayNum) {
+        this.id = null;
         this.code = code;
         this.company = company;
         this.aircraft = aircraft;
         this.origin = origin;
-        this.departedAt = departedAt;
-        this.status = FlightStatus.OnSchedule;
+        this.status = status;
+        this.scheduledArrivalTime = scheduledArrivalTime;
+        this.actualArrivalTime = actualArrivalTime;
+        this.runwayNum = runwayNum;
     }
 
-    public Flight(int id, String code, String company, Aircraft aircraft, Airport origin) {
-        this(id, code, company, aircraft, origin, LocalDateTime.now(ZoneId.of(origin.getTimeZone())));
+    public String toString() {
+        return getCode() + " (" + getCompany() + ") from " + getOrigin();
+    }
+
+    public String arrivalTimeForDashboard() {
+        switch (status) {
+            case Delayed:
+                return "Delayed until " + Utils.formatTime(actualArrivalTime);
+            default:
+                return Utils.formatTime(actualArrivalTime);
+        }
+    }
+
+    public String statusForDashboard() {
+        switch (status) {
+            case Landed:
+                return "Landed at " + Utils.formatTime(actualArrivalTime) + " (runway " + runwayNum + ")";
+            case Landing:
+                return "Landing (runway " + runwayNum + ")";
+            case AwaitingRunway:
+                return "Delayed";
+            default:
+                return "";
+        }
     }
 }

@@ -1,3 +1,9 @@
+-- Взлётно-посадочные полосы
+DELETE FROM runway;
+
+-- Рейсы
+DELETE FROM flight;
+
 -- Самолёты (модели)
 DELETE FROM aircraft;
 

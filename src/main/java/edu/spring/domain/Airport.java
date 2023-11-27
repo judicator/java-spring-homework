@@ -1,5 +1,6 @@
 package edu.spring.domain;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,27 +9,31 @@ import java.awt.geom.Point2D;
 @Getter
 @Setter
 public class Airport {
-    private final int id;
+    private Integer id;
     // Название аэропорта
-    private final String name;
+    private String name;
     // Координаты (широта и долгота)
-    private final Point2D coordinates;
+    private Point2D coordinates;
     // Двухбуквенный ISO-код страны
-    private final String isoCountry;
+    private String isoCountry;
     // Город, к которому относится аэропорт
-    private final String municipality;
+    private String municipality;
     // Трёхбуквенный IATA-код аэропорта
-    private final String iataCode;
+    private String iataCode;
     // Временная зона, в которой расположен аэропорт
-    private final String timeZone;
+    private String timeZone;
 
-    public Airport(int id, String name, Point2D coordinates, String isoCountry, String municipality, String iataCode, String timeZone) {
-        this.id = id;
+    public Airport(String name, Point2D coordinates, String isoCountry, String municipality, String iataCode, String timeZone) {
+        this.id = null;
         this.name = name;
         this.coordinates = coordinates;
         this.isoCountry = isoCountry;
         this.municipality = municipality;
         this.iataCode = iataCode;
         this.timeZone = timeZone;
+    }
+
+    public String toString() {
+        return getMunicipality() + ", " + getIsoCountry() + " (" + getIataCode() + ")";
     }
 }

@@ -1,6 +1,6 @@
 package edu.spring.dao;
 
-import java.awt.geom.Point2D;
+import edu.spring.domain.Aircraft;
 
 public interface AircraftDao {
     int getMaxMass();
@@ -9,4 +9,7 @@ public interface AircraftDao {
 
     int getMaxRange();
 
+    Aircraft getById(int id);
+
+    Aircraft getRandomAircraft(int minRange);
 }
