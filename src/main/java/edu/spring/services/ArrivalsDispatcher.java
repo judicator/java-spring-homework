@@ -20,14 +20,16 @@ public class ArrivalsDispatcher {
     // Время, необходимое на освобождение посадочной полосы посаженным рейсом
     private static final int timeUntilFreeRunway = 5;
 
-    private HomeAirport homeAirport;
-    private FlightDao flightDao;
-    private RunwayDao runwayDao;
+    private final HomeAirport homeAirport;
+    private final FlightDao flightDao;
+    private final RunwayDao runwayDao;
+    private final ClientsNotification clientsNotification;
 
-	public ArrivalsDispatcher(HomeAirport homeAirport, FlightDao flightDao, RunwayDao runwayDao) {
+	public ArrivalsDispatcher(HomeAirport homeAirport, FlightDao flightDao, RunwayDao runwayDao, ClientsNotification clientsNotification) {
         this.homeAirport = homeAirport;
 		this.flightDao = flightDao;
         this.runwayDao = runwayDao;
+        this.clientsNotification = clientsNotification;
 	}
 
     @Scheduled(initialDelay = 3000, fixedRate = 500)
@@ -42,6 +44,8 @@ public class ArrivalsDispatcher {
                 flight.setStatus(FlightStatus.Landed);
 //                flight.setActualArrivalTime(localDateTime);
                 flightDao.update(flight);
+                // Уведомляем клиентов
+                clientsNotification.notifyClients(flight);
 //                System.out.println(Utils.formatDateTime(localDateTime) + ": " + flight + " has landed!");
             });
         }
@@ -68,6 +72,8 @@ public class ArrivalsDispatcher {
                     flight.setStatus(FlightStatus.Landing);
                     flight.setRunwayNum(runway.getRandomDirName());
                     flightDao.update(flight);
+                    // Уведомляем клиентов
+                    clientsNotification.notifyClients(flight);
 //                    System.out.println(Utils.formatDateTime(localDateTime) + ": " + flight + " has finished waiting and is landing at " + runway.getFullName());
                 }
             });
@@ -84,6 +90,8 @@ public class ArrivalsDispatcher {
                     // Не получилось найти полосу для борта... переводим его в состояние "AwaitingRunway"
                     flight.setStatus(FlightStatus.AwaitingRunway);
                     flightDao.update(flight);
+                    // Уведомляем клиентов
+                    clientsNotification.notifyClients(flight);
 //                    System.out.println(Utils.formatDateTime(localDateTime) + ": " + flight + " is delayed");
                 }
                 if (runway != null) {
@@ -96,6 +104,8 @@ public class ArrivalsDispatcher {
                     flight.setStatus(FlightStatus.Landing);
                     flight.setRunwayNum(runway.getRandomDirName());
                     flightDao.update(flight);
+                    // Уведомляем клиентов
+                    clientsNotification.notifyClients(flight);
 //                    System.out.println(Utils.formatDateTime(localDateTime) + ": " + flight + " is landing at " + runway.getFullName());
                 }
             });

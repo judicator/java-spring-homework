@@ -7,6 +7,9 @@ DELETE FROM flight;
 -- Самолёты (модели)
 DELETE FROM aircraft;
 
+-- Клиенты для уведомлений об изменении статуса рейса
+DELETE FROM client_to_notify;
+
 INSERT INTO aircraft(id, icao_code, model, range, speed, mass, landing_run, takeoff_run, passengers)
 VALUES
     (nextval('aircraft_id'), 'A318', 'Airbus A318-100', 3100, 447, 68, 1230, 1780, 132),

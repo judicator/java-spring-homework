@@ -1,5 +1,6 @@
 package edu.spring.services;
 
+import ch.qos.logback.core.net.server.Client;
 import edu.spring.dao.*;
 import edu.spring.domain.Aircraft;
 import edu.spring.domain.Airport;
@@ -48,12 +49,15 @@ public class FlightGenerator {
 
     private final AirportDao airportDao;
 
-    public FlightGenerator(HomeAirport homeAirport, AircraftDao aircraftDao, FlightDao flightDao, AirportDao airportDao) {
+    private final ClientsNotification clientsNotification;
+
+    public FlightGenerator(HomeAirport homeAirport, AircraftDao aircraftDao, FlightDao flightDao, AirportDao airportDao, ClientsNotification clientsNotification) {
         this.homeAirport = homeAirport;
         homeCoordinates = homeAirport.getAirport().getCoordinates();
         this.aircraftDao = aircraftDao;
         this.flightDao = flightDao;
         this.airportDao = airportDao;
+        this.clientsNotification = clientsNotification;
     }
 
     @Scheduled(initialDelay = 3000, fixedRate = 5000)
@@ -111,7 +115,11 @@ public class FlightGenerator {
         }
         // Создание рейса
         Flight flight = new Flight(getRandomFlightCode(), flightDao.getRandomAirline(), aircraft, originAirport, status, scheduledArrival, realArrival, null);
-        flightDao.insert(flight);
+        int id = flightDao.insert(flight);
+        flight.setId(id);
+        // Создаём случайных клиентов для уведомления об изменения состояния рейса и сразу рассылаем первоначальные уведомления
+        clientsNotification.createClientsToNotify(flight);
+        clientsNotification.notifyClients(flight);;
 //        System.out.println(flight + " " + flight.getStatus().toString() + " (" + Utils.formatTime(flight.getActualArrivalTime()) + "): " + flight.getAircraft() + ", " +
 //              "flight time: " + Utils.formatFlightTime(baseFlightDuration) + ", distance: " + actualRange + " nmi");
     }

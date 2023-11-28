@@ -89,6 +89,23 @@ CREATE TABLE IF NOT EXISTS flight
 )
 TABLESPACE pg_default;
 
+CREATE SEQUENCE IF NOT EXISTS client_to_notify_id
+    INCREMENT 1
+    START 1
+    MINVALUE 1
+    MAXVALUE 9223372036854775807
+    CACHE 1;
+
+CREATE TABLE IF NOT EXISTS client_to_notify
+(
+    id integer NOT NULL,
+	flight_id integer NOT NULL,
+	phone_num varchar(12) COLLATE pg_catalog."default" NULL,
+	email varchar(100) COLLATE pg_catalog."default" NULL,
+    CONSTRAINT client_to_notify_pkey PRIMARY KEY (id)
+)
+TABLESPACE pg_default;
+
 -- Функция считает расстояние между двумя точками на поверхности Земли, результат в морских милях
 CREATE OR REPLACE FUNCTION distance_on_earth(lat1 float, lon1 float, lat2 float, lon2 float)
 RETURNS float
