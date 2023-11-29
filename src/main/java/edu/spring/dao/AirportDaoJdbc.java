@@ -1,7 +1,6 @@
 package edu.spring.dao;
 
 import edu.spring.domain.Airport;
-import org.postgresql.geometric.PGpoint;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.stereotype.Repository;
@@ -48,7 +47,7 @@ public class AirportDaoJdbc implements AirportDao {
         params.put("origLat", originCoords.getX());
         params.put("origLon", originCoords.getY());
         List<Airport> airports = namedPJdbcOps.query(
-                "select * from airport a where distance_on_earth(:origLat, :origLon, a.coordinates[0], a.coordinates[1]) between :minDistance and :maxDistance order by random() limit 1",
+                "select * from airport a where distance_on_earth(:origLat, :origLon, a.latitude, a.longitude) between :minDistance and :maxDistance order by random() limit 1",
                 params,
                 new AirportMapper());
         if (airports.size() > 0) {
@@ -84,8 +83,9 @@ public class AirportDaoJdbc implements AirportDao {
         public Airport mapRow(ResultSet resultSet, int i) throws SQLException {
             int id = resultSet.getInt("id");
             String name = resultSet.getString("name");
-            PGpoint coordsPG = resultSet.getObject("coordinates", PGpoint.class);
-            Point2D coordinates = new Point2D.Double(coordsPG.x, coordsPG.y);
+            Double latitude = resultSet.getDouble("latitude");
+            Double longitude = resultSet.getDouble("longitude");
+            Point2D coordinates = new Point2D.Double(latitude, longitude);
             String isoCountry = resultSet.getString("iso_country");
             String municipality = resultSet.getString("municipality");
             String iataCode = resultSet.getString("iata_code");

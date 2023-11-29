@@ -32,7 +32,8 @@ CREATE TABLE IF NOT EXISTS airport
     id integer NOT NULL,
     iata_code char(3) COLLATE pg_catalog."default" NOT NULL,
     iso_country char(2) COLLATE pg_catalog."default" NOT NULL,
-    coordinates point NOT NULL,
+    latitude double precision  NOT NULL,
+    longitude double precision NOT NULL,
     name varchar(500) COLLATE pg_catalog."default" NOT NULL,
     municipality varchar(500) COLLATE pg_catalog."default" NOT NULL,
     timezone varchar(100) COLLATE pg_catalog."default" NOT NULL,
@@ -99,9 +100,9 @@ CREATE SEQUENCE IF NOT EXISTS client_to_notify_id
 CREATE TABLE IF NOT EXISTS client_to_notify
 (
     id integer NOT NULL,
-	flight_id integer NOT NULL,
+	flight_id int NOT NULL,
 	phone_num varchar(12) COLLATE pg_catalog."default" NULL,
-	email varchar(100) COLLATE pg_catalog."default" NULL,
+    email varchar(255) COLLATE pg_catalog."default" NULL,
     CONSTRAINT client_to_notify_pkey PRIMARY KEY (id)
 )
 TABLESPACE pg_default;

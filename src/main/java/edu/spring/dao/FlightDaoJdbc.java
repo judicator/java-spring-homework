@@ -130,8 +130,8 @@ public class FlightDaoJdbc implements FlightDao {
         LocalDateTime oldLandedAfter = localDateTime.plusMinutes(-5);
         Map<String, Object> params = Collections.singletonMap("timestamp", oldLandedAfter);
         return namedPJdbcOps.queryForObject(
-                "select count(id) from (select * from flight where status not in ('Landed', 'Rerouted') union " +
-                        "select * from flight where status = 'Landed' and actual_arrival_time >= :timestamp)",
+                "select count(q.id) from (select * from flight where status not in ('Landed', 'Rerouted') union " +
+                        "select * from flight where status = 'Landed' and actual_arrival_time >= :timestamp) q",
                 params,
                 Integer.class
         );
