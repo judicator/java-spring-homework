@@ -1,12 +1,19 @@
 package edu.spring.domain;
 
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.Random;
 
 @Getter
+@Entity
+@Table(name = "runway")
+@NoArgsConstructor
+@AllArgsConstructor
 public class Runway {
     private static final int minLength = 1500;
     private static final int maxLength = 3600;
@@ -14,36 +21,40 @@ public class Runway {
     private static final int maxAircraftMass = 400;
 
     @Setter
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "runway_id")
+    @SequenceGenerator(name = "runway_id", sequenceName = "runway_id", allocationSize = 1)
+    @OrderBy
     private Integer id;
+
     // Наименование полосы при использовании в основном направлении
+    @Column(name = "name_dir1", nullable = false)
     private String nameDir1;
+
     // Наименование полосы при использовании в обратном направлении
+    @Column(name = "name_dir2", nullable = false)
     private String nameDir2;
+
     // Является ли ВВП главной (главная полоса способна принять любой борт)
+    @Column(name = "is_main", nullable = false)
     private boolean isMain;
+
     // Длина полосы (в метрах)
+    @Column(nullable = false)
     private int length;
+
     // Максимальная допустимая масса садящегося самолёта (в метрических тоннах)
+    @Column(name = "allowed_aircraft_mass", nullable = false)
     private int allowedAircraftMass;
+
     // Рейс, под приём которого зарезервирована полоса
+    @OneToOne
+    @JoinColumn(name = "reserved_for", referencedColumnName = "id")
     private Flight reservedFor;
+
     // Время, до которого зарезервирована полоса
+    @Column(name = "reserved_until")
     private LocalDateTime reservedUntil;
-
-    public Runway(String nameDir1, String nameDir2, boolean isMain, int length, int allowedAircraftMass, Flight reservedFor, LocalDateTime reservedUntil) {
-        this.id = null;
-        this.nameDir1 = nameDir1;
-        this.nameDir2 = nameDir2;
-        this.isMain = isMain;
-        this.length = length;
-        this.allowedAircraftMass = allowedAircraftMass;
-        this.reservedFor = reservedFor;
-        this.reservedUntil = reservedUntil;
-    }
-
-    public Runway(String nameDir1, String nameDir2, boolean isMain, int length, int allowedAircraftMass) {
-        this(nameDir1, nameDir2, isMain, length, allowedAircraftMass, null, null);
-    }
 
     public static Runway factory(char postfixDir1, char postfixDir2, boolean isMain) {
         int oppositeDir;
@@ -69,7 +80,7 @@ public class Runway {
             length = rnd.nextInt(maxLength - minLength + 1) + minLength;
             allowedAircraftMass = rnd.nextInt(maxAircraftMass - minAircraftMass + 1) + minAircraftMass;
         }
-        return new Runway(nameDir1, nameDir2, isMain, length, allowedAircraftMass);
+        return new Runway(null, nameDir1, nameDir2, isMain, length, allowedAircraftMass, null, null);
     }
 
     public String getFullName() {

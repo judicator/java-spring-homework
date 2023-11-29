@@ -1,9 +1,10 @@
 package edu.spring.services;
 
-import edu.spring.dao.ClientToNotifyDao;
 import edu.spring.domain.ClientToNotify;
 import edu.spring.domain.Flight;
+import edu.spring.repository.ClientToNotifyRepository;
 import edu.spring.utils.Utils;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,24 +15,25 @@ import java.util.Random;
 @AllArgsConstructor
 public class ClientsNotification {
     // Минимальное кол-во случайных клиентов для уведомления на каждый рейс
-    private static final int minClientstoNotify = 0;
+    private static final int minClientsToNotify = 0;
     // Максимальное кол-во случайных клиентов для уведомления на каждый рейс
-    private static final int maxClientstoNotify = 3;
+    private static final int maxClientsToNotify = 3;
 
-    private ClientToNotifyDao clientToNotifyDao;
+    private ClientToNotifyRepository clientToNotifyRepository;
 
+    @Transactional
     public void createClientsToNotify(Flight flight) {
         Random rnd = new Random();
-        int clientsCount = minClientstoNotify + rnd.nextInt(maxClientstoNotify - minClientstoNotify + 1);
+        int clientsCount = minClientsToNotify + rnd.nextInt(maxClientsToNotify - minClientsToNotify + 1);
         if (clientsCount > 0) {
             for (int i = 0; i < clientsCount; i++) {
-                clientToNotifyDao.insert(new ClientToNotify(flight, getRandomPhoneNum(), null));
+                clientToNotifyRepository.insert(new ClientToNotify(null, flight, getRandomPhoneNum(), null));
             }
         }
     }
 
     public void notifyClients(Flight flight) {
-        List<ClientToNotify> clients = clientToNotifyDao.getClientsList(flight);
+        List<ClientToNotify> clients = clientToNotifyRepository.getClientsList(flight);
         if (clients.size() > 0) {
             String msg = getMessageByFlightStatus(flight);
             if (msg != null) {

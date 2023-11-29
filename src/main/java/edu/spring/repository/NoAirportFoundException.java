@@ -1,4 +1,4 @@
-package edu.spring.dao;
+package edu.spring.repository;
 
 public class NoAirportFoundException extends RuntimeException {
     public NoAirportFoundException(String errorMessage) {

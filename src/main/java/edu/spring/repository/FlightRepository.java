@@ -1,17 +1,20 @@
-package edu.spring.dao;
+package edu.spring.repository;
 
 import edu.spring.domain.Flight;
 import edu.spring.domain.FlightStatus;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface FlightDao {
+@Repository
+public interface FlightRepository {
     Flight getById(int id);
 
     String getRandomAirline();
 
-    public int insert(Flight flight);
+    public void insert(Flight flight);
 
     public void update(Flight flight);
 
@@ -19,5 +22,5 @@ public interface FlightDao {
 
     public List<Flight> getFlightsForDashboard(LocalDateTime localDateTime);
 
-    public int getActiveFlightsCount(LocalDateTime localDateTime);
+    public Long getActiveFlightsCount(LocalDateTime localDateTime);
 }

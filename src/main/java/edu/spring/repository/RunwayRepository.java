@@ -1,4 +1,4 @@
-package edu.spring.dao;
+package edu.spring.repository;
 
 import edu.spring.domain.Aircraft;
 import edu.spring.domain.Runway;
@@ -6,14 +6,14 @@ import edu.spring.domain.Runway;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface RunwayDao {
-    Runway getById(int id);
+public interface RunwayRepository {
+    public Runway getById(int id);
 
-	List<Runway> getAll();
+    public List<Runway> getAll();
 
-    int insert(Runway runway);
+    public void insert(Runway runway);
 
-    void update(Runway runway);
+    public void update(Runway runway);
 
     Runway getSuitableRunway(Aircraft aircraft) throws NoRunwayFoundException;
 

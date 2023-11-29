@@ -1,18 +1,16 @@
 package edu.spring.services;
 
-import ch.qos.logback.core.net.server.Client;
-import edu.spring.dao.*;
 import edu.spring.domain.Aircraft;
 import edu.spring.domain.Airport;
 import edu.spring.domain.Flight;
 import edu.spring.domain.FlightStatus;
-import edu.spring.utils.Utils;
+import edu.spring.repository.*;
+import jakarta.transaction.Transactional;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.awt.geom.Point2D;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.Random;
 
 @Service
@@ -43,27 +41,28 @@ public class FlightGenerator {
 
     private final HomeAirport homeAirport;
 
-    private final FlightDao flightDao;
+    private final FlightRepository flightRepository;
 
-    private final AircraftDao aircraftDao;
+    private final AircraftRepository aircraftRepository;
 
-    private final AirportDao airportDao;
+    private final AirportRepository airportRepository;
 
     private final ClientsNotification clientsNotification;
 
-    public FlightGenerator(HomeAirport homeAirport, AircraftDao aircraftDao, FlightDao flightDao, AirportDao airportDao, ClientsNotification clientsNotification) {
+    public FlightGenerator(HomeAirport homeAirport, AircraftRepository aircraftRepository, FlightRepository flightRepository, AirportRepository airportRepository, ClientsNotification clientsNotification) {
         this.homeAirport = homeAirport;
         homeCoordinates = homeAirport.getAirport().getCoordinates();
-        this.aircraftDao = aircraftDao;
-        this.flightDao = flightDao;
-        this.airportDao = airportDao;
+        this.aircraftRepository = aircraftRepository;
+        this.flightRepository = flightRepository;
+        this.airportRepository = airportRepository;
         this.clientsNotification = clientsNotification;
     }
 
     @Scheduled(initialDelay = 3000, fixedRate = 5000)
+    @Transactional
     public void CreateRandomFlight() {
         LocalDateTime homeAirportLocalDateTime = homeAirport.getLocalDateTime();
-        if (flightDao.getActiveFlightsCount(homeAirportLocalDateTime) > maxActiveFlights) {
+        if (flightRepository.getActiveFlightsCount(homeAirportLocalDateTime) > maxActiveFlights) {
             return;
         }
         Random rnd = new Random();
@@ -80,27 +79,27 @@ public class FlightGenerator {
         if (delay > 0) {
             status = FlightStatus.Delayed;
         }
-        int maxRange = aircraftDao.getMaxRange();
+        int maxRange = aircraftRepository.getMaxRange();
         // Случайным образом выбираем длину перелёта (от минимальной до максимальной, которую имеют самолёты в БД)
         int range = rnd.nextInt(maxRange - minFlightDistance + 1) + minFlightDistance;
 
         // Выбираем случайный аэропорт в радиусе 1.9 * range (т.е. с учётом того, что в рамках рейса возможна одна промежуточная посадка)
         Airport originAirport;
         try {
-            originAirport = airportDao.getRandomAirport((int) Math.round(range * 1.9), homeCoordinates);
+            originAirport = airportRepository.getRandomAirport((int) Math.round(range * 1.9), homeCoordinates);
         }
         catch (NoAirportFoundException e) {
             // System.out.println(e.getMessage());
             return;
         }
         // Реальное расстояние между домашним аэропортом и аэропортом вылета в морских милях
-        int actualRange = airportDao.getDistance(homeCoordinates, originAirport.getCoordinates());
+        int actualRange = airportRepository.getDistance(homeCoordinates, originAirport.getCoordinates());
         int actualAircraftRange = ((int) Math.round(actualRange / 1.9));
 
         // Подбираем самолёт, который может пролететь необходимое расстояние
         Aircraft aircraft;
         try {
-            aircraft = aircraftDao.getRandomAircraft(actualAircraftRange);
+            aircraft = aircraftRepository.getRandomAircraft(actualAircraftRange);
         }
         catch (NoAircraftFoundException e) {
 //            System.out.println(e.getMessage());
@@ -114,12 +113,11 @@ public class FlightGenerator {
             baseFlightDuration += minutesForRefueling;
         }
         // Создание рейса
-        Flight flight = new Flight(getRandomFlightCode(), flightDao.getRandomAirline(), aircraft, originAirport, status, scheduledArrival, realArrival, null);
-        int id = flightDao.insert(flight);
-        flight.setId(id);
+        Flight flight = new Flight(null, getRandomFlightCode(), flightRepository.getRandomAirline(), aircraft, status, originAirport, scheduledArrival, realArrival, null);
+        flightRepository.insert(flight);
         // Создаём случайных клиентов для уведомления об изменения состояния рейса и сразу рассылаем первоначальные уведомления
         clientsNotification.createClientsToNotify(flight);
-        clientsNotification.notifyClients(flight);;
+        clientsNotification.notifyClients(flight);
 //        System.out.println(flight + " " + flight.getStatus().toString() + " (" + Utils.formatTime(flight.getActualArrivalTime()) + "): " + flight.getAircraft() + ", " +
 //              "flight time: " + Utils.formatFlightTime(baseFlightDuration) + ", distance: " + actualRange + " nmi");
     }

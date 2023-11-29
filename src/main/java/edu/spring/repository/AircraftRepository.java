@@ -1,8 +1,8 @@
-package edu.spring.dao;
+package edu.spring.repository;
 
 import edu.spring.domain.Aircraft;
 
-public interface AircraftDao {
+public interface AircraftRepository {
     int getMaxMass();
 
     int getMaxTakeoffRun();

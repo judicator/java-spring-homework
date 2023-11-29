@@ -1,4 +1,4 @@
-package edu.spring.dao;
+package edu.spring.repository;
 
 public class NoRunwayFoundException extends RuntimeException {
 	public NoRunwayFoundException(String errorMessage) {

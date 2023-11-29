@@ -1,11 +1,10 @@
-package edu.spring.dao;
+package edu.spring.repository;
 
 import edu.spring.domain.Airport;
-import edu.spring.services.HomeAirport;
 
 import java.awt.geom.Point2D;
 
-public interface AirportDao {
+public interface AirportRepository {
     int count();
 
     Airport getById(int id);

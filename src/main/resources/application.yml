@@ -3,7 +3,9 @@ spring:
     url: "jdbc:postgresql://localhost:5432/airport"
     username: "postgres"
     password: "0000"
-    initialization-mode: "always"
   sql:
     init:
       mode: "always"
+  jpa:
+    hibernate:
+      ddl-auto: none

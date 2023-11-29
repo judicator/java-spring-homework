@@ -1,13 +1,12 @@
-package edu.spring.dao;
+package edu.spring.repository;
 
 import edu.spring.domain.ClientToNotify;
 import edu.spring.domain.Flight;
 
 import java.util.List;
 
-public interface ClientToNotifyDao {
-
-    public int insert(ClientToNotify client);
+public interface ClientToNotifyRepository {
+    public void insert(ClientToNotify client);
 
     public void update(ClientToNotify client);
 
